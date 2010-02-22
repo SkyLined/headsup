@@ -25,7 +25,7 @@ class RIFF_Block(Structure):
 
     if self._name.value == 'ACON':
       valid_chunk_names = {'anih': None, 'rate': None, \
-          'LIST': ['fram', 'INFO']};
+          'LIST': ['fram', 'INFO'], 'INAM': None, 'IART': None};
     elif self._name.value == 'fram':
       valid_chunk_names = {'icon': None};
     elif self._name.value == 'INFO':
