@@ -30,6 +30,10 @@ def struct_BITMAPINFOHEADER(stream, offset, max_size, parent, name, \
     result._Height.notes.append( \
         'image divided into 2 * 0x%X|%d' % (h, h));
   if w > 0 and h > 0:
+    if w > 10000:
+      result.warnings.append('value is large');
+    if h > 10000:
+      result.warnings.append('value is large');
     if w * h > 0xFFFFFFFF:
       result.warnings.append('W*H overflows => 0x%X`%08X|%d' % \
           (w * h >> 32, w * h & 0xFFFFFFFF, w * h & 0xFFFFFFFF));
@@ -41,7 +45,9 @@ def struct_BITMAPINFOHEADER(stream, offset, max_size, parent, name, \
     else:
       result._Width.notes.append('W*H => 0x%X|%d' % (w * h, w * h));
 
-  if result._Planes.value != 1:
+  if result._Planes.value > 100:
+    result._Planes.warnings.append('value is large, expected value to be 1');
+  elif result._Planes.value != 1:
     result._Planes.warnings.append('expected value to be 1');
   if result._BitCount.value not in [1,4,8,16,24,32]:
     result._BitCount.warnings.append( \
