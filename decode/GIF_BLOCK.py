@@ -22,13 +22,13 @@ class GIF_BLOCK(Structure):
     Structure.__init__(self, stream, offset, max_size, parent, name);
 
     self._subblocks = [];
-    self.ContainStream('', 0);
+    self.ContainStream('data', None, '', 0);
     while self.DataAvailable():
       subblock = self.Member(GIF_SUBBLOCK, \
           'subblock_%d' % (len(self._subblocks) + 1));
       self._subblocks.append(subblock);
       self.ContainStream( \
-          subblock.contained_stream, subblock.contained_max_size);
+          'data', subblock.name, subblock.contained_stream, subblock.contained_max_size);
       if subblock._is_terminator:
         break;
     else:
@@ -53,11 +53,11 @@ class GIF_SUBBLOCK(Structure):
     if self._size.value == 0:
       self._is_terminator = True;
       self.notes.append('block terminator');
-      self.ContainStream('', 0);
+      self.ContainStream('data', None, '', 0);
     else:
       self._is_terminator = False;
       self._data = self.Member(C.STRING, 'data', self._size.value);
-      self.ContainStream(self._data.value, self._data.size);
+      self.ContainStream('data', 'data', self._data.value, self._data.size);
 
   def dump(self, header = None):
     if header is None:
