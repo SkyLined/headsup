@@ -154,15 +154,17 @@ class PNG(Structure):
       palette_entries = None;
 
     self._IDATs = [];
-    self.ContainStream('', 0);
+    chunks_containing_data = [];
+    self.ContainStream('compressed_pixel_data', None, '', 0);
     if 'IDAT' in self._named_chunks:
       for chunk in self._named_chunks['IDAT']:
         IDAT = chunk.ContainMember(PNG_IDAT, chunk.name + '_data');
         self._IDATs.append(IDAT);
-        self.ContainStream(IDAT._compressed_pixel_data.GetUsedStream());
+        self.ContainStream('compressed_pixel_data', chunk.name, \
+            IDAT._compressed_pixel_data.GetUsedStream());
 
     self._compressed_image_data = self.ContainMember( \
-        ZLIB_BLOCK, 'compressed_image_data');
+        ZLIB_BLOCK, 'image_data');
     if self._IHDR:
       if color_type in [0, 3]:
         samples = 1; # greyscale or index
