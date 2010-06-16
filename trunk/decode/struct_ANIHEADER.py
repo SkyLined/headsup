@@ -25,8 +25,9 @@ def struct_ANIHEADER(stream, offset, max_size, parent, name):
       ('BitCount',  C.DWORD),    # cBitCount
       ('Planes',    C.DWORD),    # cPlanes
       ('JifRate',   C.DWORD),    # JifRate
-      ('Flags',     C.DWORD),    # flags (1 = AF_ICON
+      ('Flags',     C.DWORD),    # flags (1=AF_ICON, 2=AF_SEQUENCE)
   );
+  
   max_size -= result.size;
   if result._Size.value != result.size:
     if result._Size.value > 1000 * 1000:
@@ -58,9 +59,13 @@ def struct_ANIHEADER(stream, offset, max_size, parent, name):
     result._Planes.warnings.append('value is large');
   if result._JifRate.value > 100:
     result._JifRate.warnings.append('value is large');
-  if result._Flags.value != 1:
-    result._Flags.warnings.append('expected value to be 1 (AF_ICON)');
+  if result._Flags.value not in [1, 3]:
+    result._Flags.warnings.append( \
+        'expected value to be 1 or 3 (AF_ICON | AF_SEQUENCE)');
   else:
-    result._Flags.notes.append('AF_ICON');
+    if result._Flags.value & 1:
+      result._Flags.notes.append('AF_ICON');
+    if result._Flags.value & 2:
+      result._Flags.notes.append('AF_SEQUENCE');
   return result;
 
