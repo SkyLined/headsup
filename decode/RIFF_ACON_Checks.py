@@ -15,6 +15,17 @@
 def RIFF_ACON_Checks(acon_block):
   if 'anih' not in acon_block._named_chunks:
     acon_block.warnings.append('expected one "anih" block, found none');
+    anih_block = None;
+  else:
+    anih_block = acon_block._named_chunks['anih'][0];
+    if anih_block._data._anih._Flags.value & 2:
+      if 'seq ' not in acon_block._named_chunks:
+        acon_block.warnings.append('expected one "seq" block, found none');
+    else:
+      if 'seq ' in acon_block._named_chunks:
+        acon_block.warnings.append('expected no "seq" blocks, found %d' % \
+            len(acon_block._named_chunks['seq ']));
+        
   for name, chunks in acon_block._named_chunks.items():
     if name == 'anih':
       for chunk in chunks:
@@ -26,8 +37,14 @@ def RIFF_ACON_Checks(acon_block):
       for chunk in chunks:
         if len(chunks) > 1:
           chunk._name.warnings.append( \
-              'expected only one "rate" block, found %d' % len(chunks));
+              'expected only one "rate" chunk, found %d' % len(chunks));
         RIFF_rate_Checks(acon_block, chunk);
+    if name == 'seq':
+      for chunk in chunks:
+        if len(chunks) > 1:
+          chunk._name.warnings.append( \
+              'expected only one "seq" chunk, found %d' % len(chunks));
+        RIFF_seq_Checks(acon_block, chunk);
     if name == 'LIST':
       for chunk in chunks:
         if len(chunk._named_blocks) != 1 \
@@ -53,6 +70,17 @@ def RIFF_rate_Checks(acon_block, rate_chunk):
         'expected %d rate entries, found %d' % \
         (anih_steps, len(rate_chunk._data._rates._items)));
 
+def RIFF_seq_Checks(acon_block, seq_chunk):
+  anih_steps = GetAnihSteps(acon_block);
+  if anih_steps is None:
+    if len(seq_chunk._data._seqs._items) == 0:
+      seq_chunk._data.warnings.append( \
+          'expected at least one sequence entry, found none');
+  elif len(seq_chunk._data._sequences._items) != anih_steps:
+    seq_chunk._data.warnings.append( \
+        'expected %d sequence entries, found %d' % \
+        (anih_steps, len(seq_chunk._data._sequences._items)));
+
 def RIFF_LIST_fram_Checks(acon_block, fram_list_chunk):
   for name, blocks in fram_list_chunk._named_blocks.items():
     if name == 'fram':
@@ -68,17 +96,14 @@ def RIFF_LIST_fram_Checks(acon_block, fram_list_chunk):
 def RIFF_fram_Checks(acon_block, fram_block):
   anih_steps = GetAnihSteps(acon_block);
   if 'icon' not in fram_block._named_chunks:
-    if anih_steps is not None:
-      fram_block.warnings.append( \
-          'expected %d "ICON" blocks, found none' % anih_steps);
-    else:
-      fram_block.warnings.append( \
-          'expected at least one "ICON" block, found none');
+    fram_block.warnings.append( \
+        'expected at least one "ICON" chunk, found none');
   for name, chunks in fram_block._named_chunks.items():
     if name == 'icon':
-      if anih_steps is not None and len(chunks) != anih_steps:
+      if anih_steps is not None and len(chunks) > anih_steps:
         fram_block.warnings.append( \
-            'expected %d "ICON" blocks, found %d' % (anih_steps, len(blocks)));
+            'expected at most %d "ICON" chunks, found %d' % \
+                (anih_steps, len(chunks)));
     else:
       for chunk in chunks:
         chunk._name.warnings.append('expected value to be "ICON"');
