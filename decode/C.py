@@ -113,6 +113,7 @@ class ARRAY(Structure):
       item_creator, *item_creator_args, **nitem_creator_args):
     Structure.__init__(self, stream, offset, max_size, parent, name);
 
+    self._values = [];
     self._items = [];
 
     i = 0;
@@ -121,6 +122,7 @@ class ARRAY(Structure):
       item = self.Member(item_creator, item_name, *item_creator_args, \
           **nitem_creator_args);
       self._items.append(item);
+      self._values.append(item.value);
       i += 1;
     self.notes.append('0x%X|%d items' % (items_count, items_count));
 
@@ -135,19 +137,16 @@ class UnsignedInteger(Structure):
     self.current_max_size = max_size - size;
 
     available_stream_size = len(stream) - offset;
+    if available_stream_size > size:
+      available_stream_size = size;
 
-    if available_stream_size == 0:
-      self.value = 0;
+    self.value = 0;
+    if little_endian:
+      for i in range(available_stream_size):
+        self.value |= ord(stream[offset + i]) << (8 * i);
     else:
-      self.value = 0;
-      if available_stream_size > size:
-        available_stream_size = size;
-      if little_endian:
-        for i in range(available_stream_size):
-          self.value |= ord(stream[offset + i]) << (8 * i);
-      else:
-        for i in range(available_stream_size):
-          self.value |= ord(stream[offset + i]) << (8 * (self.size - i - 1));
+      for i in range(available_stream_size):
+        self.value |= ord(stream[offset + i]) << (8 * (self.size - i - 1));
 
   def SimplifiedValue(self, header = None):
     if self.value < 0:
@@ -255,3 +254,61 @@ class STRING(Structure):
       value = value[:50] + '...' + value[-1];
     return 'string(0x%X|%d bytes): %s' % \
         (self.size, self.size, value);
+
+class FLOAT32(Structure):
+  type_name = 'float32';
+  def __init__(self, stream, offset, max_size, parent, name, \
+      little_endian=True):
+    Structure.__init__(self, stream, offset, max_size, parent, name);
+    self.dump_simplified = True;
+
+    self.size = 4;
+    self.current_offset = offset + self.size;
+    self.current_max_size = max_size - self.size;
+
+    available_stream_size = len(stream) - offset;
+    if available_stream_size > self.size:
+      available_stream_size = self.size;
+
+    value = 0;
+    if little_endian:
+      for i in range(available_stream_size):
+        value |= ord(stream[offset + i]) << (8 * i);
+    else:
+      for i in range(available_stream_size):
+        value |= ord(stream[offset + i]) << (8 * (self.size - i - 1));
+
+    self.sign_bit = value >> 31;
+    self.exponent_bits = (value >> 22) & 0xFF;
+    self.significant_bits = value & 0x7FFFFF;
+    self.sign = {0:'+', 1:'-'}[self.sign_bit];
+    sign_multiplier = {0:1, 1:-1}[self.sign_bit];
+    if self.exponent_bits == 0xFF:
+      self.isInfinity = True;
+      if self.fraction_bits != 0:
+        self.warnings.append( \
+            'expect fraction bits to be 0, found 0x%X' % self.fraction_bits);
+      self.value = sign_multiplier * float('inf');
+    else:
+      self.isInfinity = False;
+      self.exponent = self.exponent_bits - 127;
+      significant = self.significant_bits;
+      if self.exponent_bits != 0:
+        significant += 0x800000;
+      self.fraction = 0.0;
+      for bit_number in range(0, 23):
+        bit_index = 22 - bit_number;
+        bit_significant_value = 2 ** bit_index;
+        bit_fraction_value = 1.0 / 2 ** bit_number;
+        if significant & bit_significant_value:
+          self.fraction += bit_fraction_value;
+      self.value = sign_multiplier * self.fraction * (2 ** self.exponent);
+
+  def SimplifiedValue(self, header = None):
+    bits = '%1X %02X %06X' % \
+        (self.sign_bit, self.exponent_bits, self.significant_bits);
+    if self.isInfinity:
+      return self.sign + 'Infinity (%s)' % bits;
+    sign_multiplier = {0:1, 1:-1}[self.sign_bit];
+    return '%s (%s: %s * 2^%s)' % \
+        (self.value, bits, sign_multiplier * self.fraction, self.exponent);
