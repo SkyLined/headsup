@@ -68,33 +68,33 @@ class PNG_IHDR(Structure):
     self._pixels_have_alpha = False;
     self._sample_depth = bit_depth;
     if color_type == 0:
-      self._data._ColorType.notes.append('= greyscale');
+      self._data._ColorType.notes.append('greyscale');
       if bit_depth not in [1, 2, 4, 8, 16]:
         self._data._BitDepth.warnings.append( \
             'expect value to be 1, 2, 4, 8 or 16');
       self._pixels_are_grayscale = True;
     elif color_type == 2:
-      self._data._ColorType.notes.append('= truecolor');
+      self._data._ColorType.notes.append('truecolor');
       if bit_depth not in [8, 16]:
         self._data._BitDepth.warnings.append( \
             'expect value to be 8 or 16');
       self._pixels_are_RGB = True;
     elif color_type == 3:
-      self._data._ColorType.notes.append('= indexed-color');
+      self._data._ColorType.notes.append('indexed-color');
       if bit_depth not in [1, 2, 4, 8]:
         self._data._BitDepth.warnings.append( \
             'expect value to be 1, 2, 4 or 8');
       self._pixels_are_palette = True;
       self._sample_depth = 8;
     elif color_type == 4:
-      self._data._ColorType.notes.append('= greyscale with alpha');
+      self._data._ColorType.notes.append('greyscale + alpha');
       if bit_depth not in [8, 16]:
         self._data._BitDepth.warnings.append( \
             'expect value to be 8 or 16');
       self._pixels_are_grayscale = True;
       self._pixels_have_alpha = True;
     elif color_type == 6:
-      self._data._ColorType.notes.append('= truecolor with alpha');
+      self._data._ColorType.notes.append('truecolor + alpha');
       if bit_depth not in [8, 16]:
         self._data._BitDepth.warnings.append( \
             'expect value to be 8 or 16');
