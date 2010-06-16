@@ -102,11 +102,15 @@ class Structure():
       return self.unused.GetStream();
     return '';
 
-
-  def ContainStream(self, stream, max_size = None):
+  def ContainStream(self, name, source, stream, max_size = None):
     if max_size is None:
       max_size = len(stream);
     if self.contained_stream is None:
+      self.contained_name = name;
+      if source:
+        self.contained_sources = [source];
+      else:
+        self.contained_sources = [];
       self.contained_stream = stream;
       self.contained_max_size = max_size;
       self.contained_current_offset = 0;
@@ -114,6 +118,11 @@ class Structure():
       self.contained_value = [];
       self.contained_unused = None;
     else:
+      assert self.contained_name == name, \
+          'Expected only one containing stream name, got %s and %s' % \
+          (self.contained_name, name);
+      if source:
+        self.contained_sources.append(source);
       self.contained_stream += stream;
       self.contained_max_size += max_size;
       self.contained_current_max_size += max_size;
@@ -200,9 +209,13 @@ class Structure():
 
     if self.contained_stream and self.contained_value:
       print indent_header;
-      contained_data = '%s %s' % (self.type_name, self.name);
       print indent_header + ('  +- 00000000 -- contents of %s ---' % \
-          contained_data).ljust(80, '-');
+          self.contained_name).ljust(80, '-');
+      if len(self.contained_sources) == 1:
+        print indent_header + '  | // Source: %s' % self.contained_sources[0];
+      elif len(self.contained_sources) > 1:
+        print indent_header + '  | // Sources: %s' % \
+            ', '.join(self.contained_sources);
       for contained_member in self.contained_value:
         contained_member.Dump(indent_header + '  | ');
       if self.contained_current_max_size > 0:
@@ -211,7 +224,7 @@ class Structure():
             self.contained_current_max_size);
       print indent_header + \
           ('  +- %08X --- end contents %s ---' % \
-          (self.contained_max_size, contained_data)).ljust(80, '-');
+          (self.contained_max_size, self.contained_name)).ljust(80, '-');
       print indent_header;
 
     if brackets:
