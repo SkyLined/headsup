@@ -30,6 +30,18 @@ class ICON(Structure):
         self._icondir._Count.value, struct_ICONDIRENTRY, \
         self._icondir._Type.value);
 
+    details = [self._icondir.format_details];
+    dir_entry_details = {};
+    for direntry in self._icondirentries._items:
+      if direntry.format_details not in dir_entry_details:
+        dir_entry_details[direntry.format_details] = 1;
+      else:
+        dir_entry_details[direntry.format_details] += 1;
+    for format_details, count in dir_entry_details.items():
+      if count == 1:
+        details.append(format_details);
+      else:
+        details.append('%d * %s' % (count, format_details));
     self._images = [];
     self._unused = [];
     total_unused_size = 0;
@@ -66,6 +78,7 @@ class ICON(Structure):
       else:
         image = self.Member(struct_ICONIMAGE, \
             '%s_image_data' % icondirentry.name);
+        details.append(image.format_details);
         self._images.append(image);
         if overlap_size > 0:
           if previous_size > self.size:
@@ -82,3 +95,4 @@ class ICON(Structure):
     if total_unused_size > 0:
       self.warnings.append('block contains a total of 0x%X|%d unused bytes' % \
           (total_unused_size, total_unused_size));
+    self.format_details = 'ICON(%s)' % ', '.join(details);
