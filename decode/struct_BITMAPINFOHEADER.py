@@ -34,6 +34,10 @@ def struct_BITMAPINFOHEADER(stream, offset, max_size, parent, name, \
 
   w = result._Width.value;
   h = result._Height.value;
+  details = [
+    '%dx%d' % (w, h),
+    '%d bit' % (result._BitCount.value),
+  ];
   if w <= 0:
     result._Width.warnings.append('expected value larger than 0');
   if h <= 0:
@@ -67,18 +71,20 @@ def struct_BITMAPINFOHEADER(stream, offset, max_size, parent, name, \
     result._BitCount.warnings.append( \
         'Unusual value; expected 1, 4, 8, 16, 24 or 32');
   compression_methods = {  # description, BitCount limitations
-    0: ('none',             None),
-    1: ('RLE, 8 bit/pixel', [8]),
-    2: ('RLE, 4 bit/pixel', [4]),
+    0: ('uncompressed',     None),
+    1: ('8 bit RLE',        [8]),
+    2: ('4 bit RLE',        [4]),
     3: ('bitfield',         [16, 32]),
     4: ('JPEG',             None),
     5: ('PNG',              None),
   };
   if result._Compression.value not in compression_methods:
     result._Compression.warnings.append('unknown compression method');
+    details.append('unknown compression');
   else:
     description, valid_bit_counts = \
         compression_methods[result._Compression.value];
+    details.append(description);
     result._Compression.notes.append(description);
     if valid_bit_counts is not None \
         and result._BitCount.value not in valid_bit_counts:
@@ -101,4 +107,5 @@ def struct_BITMAPINFOHEADER(stream, offset, max_size, parent, name, \
     result._ClrImportant.warnings.append('expected value < 0x%X|%d' % \
         (result._ClrUsed.value, result._ClrUsed.value));
 
+  result.format_details = ', '.join(details);
   return result;
