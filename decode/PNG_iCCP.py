@@ -44,7 +44,11 @@ class PNG_iCCP(Structure):
       self._compression_method.warnings.append( \
           'unknown methods, zlib deflate assumed');
 
-    self._compressed_profile = self.Member(ZLIB_BLOCK, 'compressed_profile');
+    self._compressed_profile = self.Member(ZLIB_BLOCK, 'data');
+    self._profile = self._compressed_profile.ContainMember( \
+        C.STRING, 'profile', \
+        self._compressed_profile.current_contained_max_size);
+    # TODO (SkyLined): handle profile correctly (I'm assuming it's not a string)
 
     self.Unused();
 
