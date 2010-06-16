@@ -19,10 +19,11 @@ class LZW_compressed_data(Structure):
   def __init__(self, stream, offset, max_size, parent, name, \
       minimum_code_size, little_endian = True, extra_slots = 0):
     import C;
-    Structure.__init__(self, stream, offset, max_size, parent, name);
+    Structure.__init__(self, stream, offset, max_size, parent, 
+        'compressed_' + name);
     self.dump_simplified = True;
 
-    self.ContainStream('', 0);
+    self.ContainStream('decompressed_' + name, 'compressed_' + name, '', 0);
     if minimum_code_size == 0:
       self.warnings.append('invalid minimum code size for lzw decompression');
     else:
@@ -86,19 +87,22 @@ class LZW_compressed_data(Structure):
         else:
           original_code = code;
           if code == slot and fc is not None:
-            self.ContainStream(chr(fc), 1);
+            self.ContainStream('decompressed_' + name, \
+                'compressed_' + name, chr(fc), 1);
             code = oc;
           elif code >= slot:
             self.warnings.append( \
                 'code 0x%X > slot (0x%X) causes error' % (code, slot));
             break;
           while code >= new_codes:
-            self.ContainStream(chr(suffix[code]), 1);
+            self.ContainStream('decompressed_' + name, 'compressed_' + name, \
+                chr(suffix[code]), 1);
             code = prefix[code];
           if code > 0xFF:
             self.warnings.append('code 0x%X > 0xFF causes error' % code);
             break;
-          self.ContainStream(chr(code), 1);
+          self.ContainStream('decompressed_' + name, 'compressed_' + name, \
+              chr(code), 1);
           if slot < (1 << current_code_bit_count) and oc is not None:
             suffix[slot] = code;
             prefix[slot] = oc;
