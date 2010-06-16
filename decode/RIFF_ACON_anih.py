@@ -14,7 +14,7 @@
 
 from Structure import Structure;
 
-class RIFF_anih(Structure):
+class RIFF_ACON_anih(Structure):
   type_name = 'RIFF_anih';
   def __init__(self, stream, offset, max_size, parent, name):
     import C;
@@ -22,5 +22,13 @@ class RIFF_anih(Structure):
     Structure.__init__(self, stream, offset, max_size, parent, name);
     
     self._anih = self.Member(struct_ANIHEADER, 'anih_data');
+
+    header_format_details = ', '.join([
+      '%d frames' % self._anih._Frames.value,
+      '%d steps' % self._anih._Steps.value,
+      '%d bit' % self._anih._BitCount.value,
+    ]);
+    
+    self.format_details = 'anih(%s)' % header_format_details;
 
     self.Unused();
