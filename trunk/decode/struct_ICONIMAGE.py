@@ -30,6 +30,7 @@ class struct_ICONIMAGE(Structure):
     # Height is split in two for XOR and AND mask:
     mask_h = int(math.floor( \
         self._bitmapinfo._header._Height.value / 2.0));
+    self.format_details = 'IMAGE(%s)' % self._bitmapinfo.format_details;
     if self._bitmapinfo._header._Height.value % 2 == 1:
       self._bitmapinfo._header._Height.warnings.append( \
           'expected an even value');
@@ -53,8 +54,9 @@ class struct_ICONIMAGE(Structure):
       image_size = self._bitmapinfo._header._SizeImage.value;
       off_by = image_size - xor_mask_pixels_bytes - and_mask_pixels_bytes;
       if image_size == 0 and off_by:
-        self._bitmapinfo._header._SizeImage.warnings.append( \
-            'expected value to be 0x%X|%d bytes' % (-off_by, -off_by));
+        pass; # This is so common, it's not worth mentioning
+#        self._bitmapinfo._header._SizeImage.warnings.append( \
+#            'expected value to be 0x%X|%d bytes' % (-off_by, -off_by));
       elif off_by > 0:
         self._bitmapinfo._header._SizeImage.warnings.append( \
             'icon masks use 0x%X|%d bytes less than this value' % \
