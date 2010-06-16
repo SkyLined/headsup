@@ -16,7 +16,35 @@ import C;
 from RIFF_Chunk import RIFF_Chunk;
 
 def WAV(stream, offset, max_size, parent, name):
-  result = RIFF_Chunk(stream, offset, max_size, parent, name, \
-    # TODO: Add structure
-  );
+  result = RIFF_Chunk(stream, offset, max_size, parent, name, {
+    'RIFF': {
+      'WAVE': {
+        'fact': None,
+        'fmt ': None,
+        'data': None,
+        'cue ': None,
+        'PEAK': None,
+        'JUNK': None,
+        'PAD ': None,
+        'DISP': None,
+        'LIST': {
+          'INFO': {
+            'IART': None,
+            'ICMT': None,
+            'ICOP': None,
+            'ICRD': None,
+            'IPRD': None,
+            'IPRT': None,
+            'ISBJ': None,
+            'ISFT': None,
+          },
+          'adtl': {
+            'labl': None,
+            'note': None,
+            'ltxt': None,
+          }
+        }
+      }
+    }
+  });
   return result;
