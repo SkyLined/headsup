@@ -92,9 +92,9 @@ class PNG_iTXt(Structure):
         self._compression_method.warnings.append( \
             'unknown methods, zlib deflate assumed');
   
-      self._compressed_text = self.Member(ZLIB_BLOCK, 'compressed_text');
+      self._compressed_text = self.Member(ZLIB_BLOCK, 'data');
       self._text = self._compressed_text.ContainMember( \
-          C.STRING, 'decompressed_text', \
+          C.STRING, 'text', \
           self._compressed_text.current_contained_max_size);
       PNG_CheckText(self._text, can_be_empty = True, max_size = None, \
           no_extra_spaces = False, utf_8 = False, newlines = True, \
