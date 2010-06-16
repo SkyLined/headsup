@@ -20,6 +20,8 @@ class file_(Structure):
     self.type_name = type_name;
     Structure.__init__(self, stream, offset, max_size, parent, name);
     self._contents = self.Member(structure_class, 'used');
+    if hasattr(self._contents, 'format_details'):
+      self.format_details = self._contents.format_details;
     self.Unused();
 
 def ANI(stream, offset, max_size, name):
