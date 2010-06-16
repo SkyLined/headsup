@@ -43,6 +43,9 @@ def struct_ICONDIRENTRY(stream, offset, max_size, parent, name, \
     );
   w = result._Width.value;
   h = result._Height.value;
+  format_details = ['%dx%d' % (w, h)];
+  if image_type != 2:
+    format_details.append('%d bit' % result._BitCount.value);
   if w * h > 0xFFFFFFFF:
     result.warnings.append('W*H overflows => 0x%X`%08X|%d' % \
         (w * h >> 32, w * h & 0xFFFFFFFF, w * h & 0xFFFFFFFF));
@@ -77,6 +80,8 @@ def struct_ICONDIRENTRY(stream, offset, max_size, parent, name, \
   else:
     result._ImageOffset.notes.append('+0x%X|+%d from current' % \
         (image_offset_from_current, image_offset_from_current));
+
+  result.format_details = ', '.join(format_details);
 
   return result;
 
