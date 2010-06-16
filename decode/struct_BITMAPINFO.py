@@ -27,6 +27,7 @@ class struct_BITMAPINFO(Structure):
     self._header = self.Member(struct_BITMAPINFOHEADER, \
         'header', height_div_2);
 
+    self.format_details = self._header.format_details;
     bit_count = self._header._BitCount.value;
     compression = self._header._Compression.value;
     number_of_colors = 2 ** bit_count;
