@@ -144,7 +144,7 @@ class PNG_CHUNK(Structure):
           'expected fourth character to be [A-Za-z]');
 
     self._data = self.Member(C.STRING, 'data', self._length.value);
-    self.ContainStream(self._data.value, self._data.size);
+    self.ContainStream('data', 'data', self._data.value, self._data.size);
 
     self._crc = self.Member(C.DWORD, 'crc', little_endian = False);
 
