@@ -20,9 +20,9 @@ class ZLIB_BLOCK(Structure):
   def __init__(self, stream, offset, max_size, parent, name):
     import zlib;
     import C;
-    Structure.__init__(self, stream, offset, max_size, parent, name);
+    Structure.__init__(self, stream, offset, max_size, parent, \
+        'compressed_' + name);
 
-    self.ContainStream('', 0);
     self._header = self.Member(C.BITFIELD, 'header',
         ('FCHECK', 4),
         ('FDICT', 1),
@@ -78,9 +78,11 @@ class ZLIB_BLOCK(Structure):
       # it may be useful at some point.
       self._decompressed_data = zlib.decompress(self.GetMaxStream());
     except Exception, e:
+      self.ContainStream('decompressed_' + name, None, '', 0);
       self._compressed_data.warnings.append('cannot decode: %s' % e);
     else:
-      self.ContainStream(self._decompressed_data, len(self._decompressed_data));
+      self.ContainStream('decompressed_' + name, None, \
+          self._decompressed_data, len(self._decompressed_data));
     
     self._ADLER32 = self.Member(C.DWORD, 'ADLER32', little_endian = False);
 
