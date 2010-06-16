@@ -45,7 +45,7 @@ class GIF_IMAGE(Structure):
     self._compressed_pixel_data_container = self.Member(GIF_BLOCK, 'pixel_data');
     self._pixel_data_container = \
         self._compressed_pixel_data_container.ContainMember( \
-        LZW_compressed_data, 'decompressed_pixel_data', \
+        LZW_compressed_data, 'pixel_data', \
         self._lzw_minimum_code_size.value);
     self._pixel_data = self._pixel_data_container.ContainMember( \
         C.STRING, 'pixel_data', \
