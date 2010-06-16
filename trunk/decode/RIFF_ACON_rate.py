@@ -14,7 +14,7 @@
 
 from Structure import Structure;
 
-class RIFF_rate(Structure):
+class RIFF_ACON_rate(Structure):
   type_name = 'RIFF_rate';
   def __init__(self, stream, offset, max_size, parent, name):
     import math;
@@ -24,12 +24,16 @@ class RIFF_rate(Structure):
 
     number_of_rates = int(math.floor(max_size / 4.0));
     self._rates = self.Member(C.ARRAY, 'rates', number_of_rates, C.DWORD);
+    self.format_details = 'rate(%d)' % number_of_rates;
 
     self.Unused();
 
   def SimplifiedValue(self, header = None):
-    value = repr(self.value);
+    values = [];
+    for item in self._rates._items:
+      values.append('%d' % item.value);
+    value = ', '.join(values);
     if len(value) > 50:
       value = value[:50] + '...' + value[-1];
-    return 'string(0x%X|%d bytes): %s' % \
-        (self.size, self.size, value);
+    c = len(self._rates._items);
+    return '%d|0x%X * DWORD: %s' % (c, c, value);
