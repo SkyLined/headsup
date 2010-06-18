@@ -59,13 +59,13 @@ class BITFIELD_COMPONENT(Structure):
       bits = {True:'1', False:'0'}[self.value & (1 << i) > 0] + bits;
 
     if self.bit_size == 1:
-      bits = 'bit  %d' % (self.bit_offset + 1);
+      bits = 'bit %d' % (self.bit_offset + 1);
     else:
       bits = 'bits %d-%d' % \
           (self.bit_offset + 1, self.bit_offset + self.bit_size);
 
-    return '%d bits: %sb|0x%X|%d' % \
-        (self.bit_size, bits, self.value, self.value);
+    return '%s (%d bits): 0x%X|%d' % \
+        (bits, self.bit_size, self.value, self.value);
 
 class BITFIELD(Structure):
   type_name = 'BITFIELD';
