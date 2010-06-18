@@ -64,15 +64,18 @@ class ZLIB_BLOCK(Structure):
     else:
       self._header._FLEVEL.notes.append('unknown');
 
-    # Dictionary is optional
-    if self._header._FDICT.value == 1:
-      self._dictionary = self.Member(C.DWORD, 'DICTID');
-    else:
-      self._dictionary = None;
-
     self._compressed_data = self.Member(C.STRING, 'compressed_data', \
         self.current_max_size - 4);
     self._decompressed_data = None;
+
+    # Dictionary is optional, but as we do not know what the dictionary is, we
+    # cannot decompress data with a dictionary:
+    if self._header._FDICT.value == 1:
+#      self._dictionary = self.Member(C.DWORD, 'DICTID');
+#      self._dictionary.warnings.append('dictionary not allowed');
+      self._header._FDICT.warnings.append('expected value to be 0');
+#    else:
+#      self._dictionary = None;
     try:
       # Implementing this for advanced error checking is not my priority, but
       # it may be useful at some point.
