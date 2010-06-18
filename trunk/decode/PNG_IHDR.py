@@ -67,6 +67,10 @@ class PNG_IHDR(Structure):
     self._pixels_are_palette = False;
     self._pixels_have_alpha = False;
     self._sample_depth = bit_depth;
+    if bit_depth == 1:
+      self._data._BitDepth.notes.append('black/white');
+    else:
+      self._data._BitDepth.notes.append('%d colors' % (2 ** bitdepth));
     if color_type == 0:
       self._data._ColorType.notes.append('greyscale');
       if bit_depth not in [1, 2, 4, 8, 16]:
