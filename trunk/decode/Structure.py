@@ -14,7 +14,7 @@
 
 g_debug_output = False;
 
-class Structure():
+class Structure(object):
   def __init__(self, stream, offset, max_size, parent, name):
     if g_debug_output:
       print 'Create Structure %s %s @%08X' % (self.type_name, name, offset);
@@ -173,13 +173,20 @@ class Structure():
     else:
       notes = '';
 
+    simplified_values = None;
     if self.dump_simplified:
       if hasattr(self, 'SimplifiedValue'):
         dump_value = self.SimplifiedValue();
+        brackets = False;
+      elif hasattr(self, 'SimplifiedValues'):
+        dump_value = '%s (0x%X|%d members)' % \
+            (self.type_name, len(self.value), len(self.value));
+        simplified_values = self.SimplifiedValues();
+        brackets = True;
       else:
         dump_value = '%s (0x%X|%d members)' % \
             (self.type_name, len(self.value), len(self.value));
-      brackets = False
+        brackets = False;
     else:
       dump_value = self.type_name;
       brackets = True;
@@ -200,11 +207,15 @@ class Structure():
     if not self.dump_simplified:
       for member in self.value:
         member.Dump(indent_header, indent_body + '  ');
-      off_by = self.offset + self.size - self.current_offset;
-      if off_by > 0:
-        print indent_header + ''.ljust(header_size) + indent_body + \
-            '// *** Heads up! 0x%X|%d more bytes have not been assigned any ' \
-            'use!' % (off_by, off_by);
+    elif simplified_values:
+      for simplified_value in simplified_values:
+        print indent_header + ''.ljust(header_size) + \
+            indent_body + '  ' + simplified_value;
+    off_by = self.offset + self.size - self.current_offset;
+    if off_by > 0:
+      print indent_header + ''.ljust(header_size) + indent_body + \
+          '// *** Heads up! 0x%X|%d more bytes have not been assigned any ' \
+          'use!' % (off_by, off_by);
         
 
     if self.contained_stream and self.contained_value:

@@ -21,6 +21,7 @@ HANDLED_FILETYPES = [
     (['bmp'], r'BM',                      decode.file.BMP, 'bitmap'),
     (['gif'], r'GIF',                     decode.file.GIF, 'gif_image'),
     (['ico'], None,                       decode.file.ICO, 'icon'),
+    (['lnk'], r'L\0\0\0',                 decode.file.LNK, 'link'),
     (['png'], r'\\x89PNG\\r\\n\\x1A\\n',  decode.file.PNG, 'png_image'),
     (['wav'], r'RIFF[\s\S]{4}WAVE',       decode.file.WAV, 'waveform'),
 ];

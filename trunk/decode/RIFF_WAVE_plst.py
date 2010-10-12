@@ -12,14 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from Structure import Structure;
 
-# http://msdn.microsoft.com/en-us/library/aa922960.aspx
-def struct_RGBAQUAD(stream, offset, max_size, parent, name):
-  import C;
-  return C.STRUCT(stream, offset, max_size, parent, name, 
-      'RGBQUAD', \
-      ('Red',               C.BYTE),
-      ('Green',             C.BYTE),
-      ('Blue',              C.BYTE),
-      ('Alpha',             C.BYTE),
-    );
+class RIFF_WAVE_plst(Structure):
+  type_name = 'RIFF_WAVE_plst'
+  def __init__(self, stream, offset, max_size, parent, name):
+    import C;
+    Structure.__init__(self, stream, offset, max_size, parent, name);
+
+    self._PlaylistName = self.Member(C.STRING, 'PlaylistName', 4);
+    self._Length = self.Member(C.DWORD, 'Length');
+    self._Loops = self.Member(C.DWORD, 'Loops');
+    self.format_details = 'plst';
+    if self._Length.value == 0:
+      self._Length.warnings.append('expected value to be at least 1');
+
+    self.Unused();
