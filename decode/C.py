@@ -14,10 +14,10 @@
 
 from Structure import Structure;
 
-def x():
+def x(object):
   pass;
 function_type = type(x);
-class x():
+class x(object):
   pass;
 class_type = type(x);
 
@@ -42,6 +42,7 @@ class STRUCT(Structure):
 
     self.notes.append('0x%X|%d members' % (len(self.value), len(self.value)));
 
+
 class BITFIELD_COMPONENT(Structure):
   type_name = 'BITFIELD_COMPONENT';
   def __init__(self, stream, offset, max_size, parent, name, \
@@ -59,13 +60,18 @@ class BITFIELD_COMPONENT(Structure):
       bits = {True:'1', False:'0'}[self.value & (1 << i) > 0] + bits;
 
     if self.bit_size == 1:
-      bits = 'bit %d' % (self.bit_offset + 1);
+      result = 'bit %d: %d' % (self.bit_offset + 1, self.value);
     else:
-      bits = 'bits %d-%d' % \
-          (self.bit_offset + 1, self.bit_offset + self.bit_size);
-
-    return '%s (%d bits): 0x%X|%d' % \
-        (bits, self.bit_size, self.value, self.value);
+      bit_values = 'b|0x%X|%d' % (self.value, self.value);
+      for i in range(self.bit_size):
+        if self.value & (1 << i):
+          bit_values = '1' + bit_values;
+        else:
+          bit_values = '0' + bit_values;
+      bits = 'bits %d-%d (%d bits)' % \
+          (self.bit_offset + 1, self.bit_offset + self.bit_size, self.bit_size);
+      result = '%s: %s' % (bits, bit_values);
+    return result;
 
 class BITFIELD(Structure):
   type_name = 'BITFIELD';
@@ -107,6 +113,16 @@ class BITFIELD(Structure):
     self.current_offset += self.size;
     self.current_max_size -= self.size;
 
+  def SimplifiedValues(self, header = None):
+    results = [];
+    for component in self.value:
+      if component.value != 0:
+        results.append('%s (%s)' % (component.name, component.SimplifiedValue()));
+    if len(results) == 0:
+      return ['No bits set'];
+    else:
+      return results;
+
 class ARRAY(Structure):
   type_name = 'ARRAY';
   def __init__(self, stream, offset, max_size, parent, name, items_count, \
@@ -117,7 +133,7 @@ class ARRAY(Structure):
     self._items = [];
 
     i = 0;
-    while self.DataAvailable(1) and i < items_count:
+    while i < items_count: # and self.DataAvailable(1) 
       item_name = '%s[0x%X|%d]' % (name, i, i);
       item = self.Member(item_creator, item_name, *item_creator_args, \
           **nitem_creator_args);
@@ -168,6 +184,11 @@ class SignedInteger(UnsignedInteger):
       if self.value >= negative_value:
         self.value -= negative_value * 2;     # 0x100, 0x100000, etc...
 
+class QWORD(UnsignedInteger):
+  type_name = 'QWORD';
+  def __init__(self, stream, offset, max_size, parent, name, little_endian=True):
+    UnsignedInteger.__init__(self, stream, offset, max_size, parent, name, 8, \
+        little_endian);
 class DWORD(UnsignedInteger):
   type_name = 'DWORD';
   def __init__(self, stream, offset, max_size, parent, name, little_endian=True):
@@ -183,6 +204,11 @@ class BYTE(UnsignedInteger):
   def __init__(self, stream, offset, max_size, parent, name):
     UnsignedInteger.__init__(self, stream, offset, max_size, parent, name, 1);
 
+class UINT64(UnsignedInteger):
+  type_name = 'UINT64';
+  def __init__(self, stream, offset, max_size, parent, name, little_endian=True):
+    UnsignedInteger.__init__(self, stream, offset, max_size, parent, name, 8, \
+        little_endian);
 class UINT(UnsignedInteger):
   type_name = 'UINT';
   def __init__(self, stream, offset, max_size, parent, name, little_endian=True):
@@ -203,6 +229,11 @@ class UCHAR(UnsignedInteger):
   def __init__(self, stream, offset, max_size, parent, name):
     UnsignedInteger.__init__(self, stream, offset, max_size, parent, name, 1);
 
+class INT64(SignedInteger):
+  type_name = 'INT64';
+  def __init__(self, stream, offset, max_size, parent, name, little_endian=True):
+    SignedInteger.__init__(self, stream, offset, max_size, parent, name, 8, \
+        little_endian);
 class INT(SignedInteger):
   type_name = 'INT';
   def __init__(self, stream, offset, max_size, parent, name, little_endian=True):
@@ -254,6 +285,53 @@ class STRING(Structure):
       value = value[:50] + '...' + value[-1];
     return 'string(0x%X|%d bytes): %s' % \
         (self.size, self.size, value);
+
+class UNICODE_STRING(Structure):
+  type_name = 'unicode_string';
+  def __init__(self, stream, offset, max_size, parent, name, size = None):
+    Structure.__init__(self, stream, offset, max_size, parent, name);
+    self.dump_simplified = True;
+
+    available_stream_size = len(stream) - offset;
+    if available_stream_size >= 0:
+      available_stream = stream[offset:];
+      if size is None:
+        # No size means NULL terminated; find NULL:
+        self.size = 0;
+        for i in range(0, len(available_stream), 2):
+          if available_stream[i:i+2] == '\0\0':
+            self.size = i + 2;
+            break;
+        if self.size == 0:
+          # No NULL found means string not terminated:
+          self.size = len(available_stream) / 2; # treat entire stream as string
+          self.warnings.append( \
+              'string is not NULL terminated and ends beyond end of stream');
+      else:
+        self.size = size;
+      if self.size % 2 == 1:
+        self.warnings.append('Expected size to be even');
+      self.value = u'';
+      for i in range(0, self.size / 2):
+        char_code_low = 0;
+        char_code_high = 0;
+        if i * 2 < len(available_stream):
+          char_code_low = ord(available_stream[i * 2]);
+          if i * 2 + 1 < len(available_stream):
+            char_code_high = ord(available_stream[i * 2 + 1]);
+        char_code = (char_code_high << 8) + char_code_low;
+        self.value += unichr(char_code);
+      self.current_offset += self.size;
+      self.current_max_size -= self.size;
+    else:
+      self.value = '';
+
+  def SimplifiedValue(self, header = None):
+    value = repr(self.value);
+    if len(value) > 50:
+      value = value[:50] + '...' + value[-1];
+    return 'unicode_string(0x%X|%d bytes): %s' % \
+        (self.size * 2, self.size * 2, value);
 
 class FLOAT32(Structure):
   type_name = 'float32';
