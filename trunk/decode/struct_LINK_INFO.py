@@ -99,13 +99,14 @@ class struct_COMMON_NETWORK_RELATIVE_LINK(Structure):
     if self._CommonNetworkRelativeLinkFlags._ValidNetType.value == 0 \
         and self._NetworkProviderType.value != 0:
       self._NetworkProviderType.warnings.append('Expected value to be 0');
-    if self._NetworkProviderType.value > 0:
-      if self._NetworkProviderType.value in KNOWN_NETWORK_PROVIDER_TYPES:
-        self._NetworkProviderType.notes.append( \
-            KNOWN_NETWORK_PROVIDER_TYPES[self._NetworkProviderType.value]);
-      else:
-        self._NetworkProviderType.warnings.append( \
-        
+# This was never finished
+#    if self._NetworkProviderType.value > 0:
+#      if self._NetworkProviderType.value in KNOWN_NETWORK_PROVIDER_TYPES:
+#        self._NetworkProviderType.notes.append( \
+#            KNOWN_NETWORK_PROVIDER_TYPES[self._NetworkProviderType.value]);
+#      else:
+#        self._NetworkProviderType.warnings.append( \
+#        
 
 class struct_LINK_INFO(Structure):
   type_name = 'LINK_INFO';
